@@ -64,9 +64,17 @@ public class RandomLights extends TimerTask {
         	for (int i = 0; i<lights.size(); i++){
         		int[] rgb = rgbs[i];
         		PHLight light = lights.get(i);
+        		lightState.isOn();
         		float xy[] = PHUtilities.calculateXYFromRGB(rgb[0],rgb[1],rgb[2],light.getModelNumber());
         		lightState.setX(xy[0]);
         		lightState.setY(xy[1]);
+        		int grey = (rgb[0]+rgb[1]+rgb[2])/3;
+        		if (grey<10){
+        			lightState.setOn(false);
+        		}else{
+        			if(!light.getLastKnownLightState().isOn()){ lightState.setOn(true); }
+        		}
+        		lightState.setBrightness(grey);
         		bridge.updateLightState(light, lightState); // If no bridge response is required then use this simpler form.
         	}
         }
