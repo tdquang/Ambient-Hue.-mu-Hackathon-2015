@@ -210,6 +210,13 @@ public class Controller {
         	bridge.deleteGroup("Streaming",null);
             heartbeatManager.disableLightsHeartbeat(bridge);
             heartbeatManager.disableAllHeartbeats(bridge);
+        	List<PHLight> allLights = cache.getAllLights();
+    		PHLightState lightState = new PHLightState();
+			lightState.setOn(false);
+			for(PHLight light: allLights){
+				bridge.updateLightState(light,lightState);
+			}
+
         }
     }
 
