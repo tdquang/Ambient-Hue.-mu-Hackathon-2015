@@ -187,14 +187,15 @@ public class Controller {
         		IDs.add(light.getIdentifier());
         	}
         	RandomLights lightSwitcher;
-        	if(prevModel!="NO"){
-        		bridge.createGroup("Streaming", IDs, null);
-        		lightSwitcher = new RandomLights("Streaming",bridge, prevModel);
-        	}else{
-        		lightSwitcher = new RandomLights(allLights,bridge);
-        	}
+//        	if(prevModel!="NO"){
+//        		bridge.createGroup("Streaming", IDs, null);
+//        		lightSwitcher = new RandomLights("Streaming",bridge, prevModel);
+//        	}else{
+//        		lightSwitcher = new RandomLights(allLights,bridge);
+//        	}
+        	lightSwitcher = new RandomLights(allLights,bridge);
         	timer = new Timer();
-        	timer.schedule(lightSwitcher, 0, 1000);
+        	timer.schedule(lightSwitcher, 0, 500);
         	//        for (PHLight light : allLights) {
         	//            PHLightState lightState = new PHLightState();
         	//            lightState.setHue(rand.nextInt(MAX_HUE));
