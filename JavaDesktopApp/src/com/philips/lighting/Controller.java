@@ -2,6 +2,7 @@ package com.philips.lighting;
 
 import java.util.List;
 import java.util.Random;
+import java.util.Timer;
 
 import javax.swing.JDialog;
 
@@ -154,12 +155,14 @@ public class Controller {
 
         List<PHLight> allLights = cache.getAllLights();
         Random rand = new Random();
-
-        for (PHLight light : allLights) {
-            PHLightState lightState = new PHLightState();
-            lightState.setHue(rand.nextInt(MAX_HUE));
-            bridge.updateLightState(light, lightState); // If no bridge response is required then use this simpler form.
-        }
+        RandomLights lightSwitcher = new RandomLights(allLights,bridge);
+        Timer timer = new Timer();
+        timer.schedule(lightSwitcher, 0, 500);
+//        for (PHLight light : allLights) {
+//            PHLightState lightState = new PHLightState();
+//            lightState.setHue(rand.nextInt(MAX_HUE));
+//            bridge.updateLightState(light, lightState); // If no bridge response is required then use this simpler form.
+//        }
     }
 
     public void showControlLightsWindow() {
