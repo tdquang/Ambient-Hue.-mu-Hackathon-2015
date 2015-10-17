@@ -1,6 +1,9 @@
 package com.philips.lighting;
 
+import java.awt.print.Book;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Timer;
 
@@ -11,20 +14,28 @@ import com.philips.lighting.gui.AccessPointList;
 import com.philips.lighting.gui.DesktopView;
 import com.philips.lighting.gui.LightColoursFrame;
 import com.philips.lighting.gui.PushLinkFrame;
+import com.philips.lighting.hue.listener.PHGroupListener;
 import com.philips.lighting.hue.sdk.PHAccessPoint;
 import com.philips.lighting.hue.sdk.PHBridgeSearchManager;
 import com.philips.lighting.hue.sdk.PHHueSDK;
 import com.philips.lighting.hue.sdk.PHMessageType;
 import com.philips.lighting.hue.sdk.PHSDKListener;
+import com.philips.lighting.hue.sdk.heartbeat.PHHeartbeatManager;
 import com.philips.lighting.model.PHBridge;
+import com.philips.lighting.model.PHBridgeResource;
 import com.philips.lighting.model.PHBridgeResourcesCache;
+import com.philips.lighting.model.PHGroup;
 import com.philips.lighting.model.PHHueError;
 import com.philips.lighting.model.PHHueParsingError;
 import com.philips.lighting.model.PHLight;
 import com.philips.lighting.model.PHLightState;
 
 public class Controller {
-
+	private boolean streamingStarted;
+	PHHeartbeatManager heartbeatManager;
+	Timer timer;
+	
+	
     private PHHueSDK phHueSDK;
     private DesktopView desktopView;
     
@@ -35,9 +46,11 @@ public class Controller {
     private Controller instance;
 
     public Controller(DesktopView view) {
+    	heartbeatManager = PHHeartbeatManager.getInstance();
         this.desktopView = view;
         this.phHueSDK = PHHueSDK.getInstance();
         this.instance = this;
+        streamingStarted = false;
     }
 
     public void findBridges() {
@@ -149,20 +162,54 @@ public class Controller {
         this.listener = listener;
     }
 
-    public void randomLights() {
+    @SuppressWarnings("deprecation")
+	public void randomLights() {
         PHBridge bridge = phHueSDK.getSelectedBridge();
         PHBridgeResourcesCache cache = bridge.getResourceCache();
 
-        List<PHLight> allLights = cache.getAllLights();
-        Random rand = new Random();
-        RandomLights lightSwitcher = new RandomLights(allLights,bridge);
-        Timer timer = new Timer();
-        timer.schedule(lightSwitcher, 0, 500);
-//        for (PHLight light : allLights) {
-//            PHLightState lightState = new PHLightState();
-//            lightState.setHue(rand.nextInt(MAX_HUE));
-//            bridge.updateLightState(light, lightState); // If no bridge response is required then use this simpler form.
-//        }
+        if(!streamingStarted){
+        	streamingStarted = true;
+        	heartbeatManager.enableLightsHeartbeat(bridge, 2000);
+
+        	List<PHLight> allLights = cache.getAllLights();
+        	//        Random rand = new Random();
+        	List<String> IDs = new ArrayList<String>();
+        	String prevModel = "";
+        	for (PHLight light : allLights){
+        		String currentModel = light.getModelNumber();
+        		if (prevModel == ""){
+        			prevModel = currentModel;
+        		}else{
+        			if(currentModel != prevModel){
+        				prevModel = "NO";
+        			}
+        		}
+        		IDs.add(light.getIdentifier());
+        	}
+        	RandomLights lightSwitcher;
+        	if(prevModel!="NO"){
+        		bridge.createGroup("Streaming", IDs, null);
+        		lightSwitcher = new RandomLights("Streaming",bridge, prevModel);
+        	}else{
+        		lightSwitcher = new RandomLights(allLights,bridge);
+        	}
+        	timer = new Timer();
+        	timer.schedule(lightSwitcher, 0, 1000);
+        	//        for (PHLight light : allLights) {
+        	//            PHLightState lightState = new PHLightState();
+        	//            lightState.setHue(rand.nextInt(MAX_HUE));
+        	//            bridge.updateLightState(light, lightState); // If no bridge response is required then use this simpler form.
+        	//        }
+
+        	// To stop the heartbeat you can use either of the below
+        }else{
+        	streamingStarted = false;
+        	timer.cancel();
+        	timer.purge();
+        	bridge.deleteGroup("Streaming",null);
+            heartbeatManager.disableLightsHeartbeat(bridge);
+            heartbeatManager.disableAllHeartbeats(bridge);
+        }
     }
 
     public void showControlLightsWindow() {

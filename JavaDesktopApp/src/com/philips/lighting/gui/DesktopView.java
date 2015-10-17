@@ -100,12 +100,17 @@ public class DesktopView extends JFrame {
             }
         });
         
-        randomLightsButton = new JButton("Randomize Lights");
+        randomLightsButton = new JButton("Start Streaming");
         randomLightsButton.setEnabled(false);
         randomLightsButton.addActionListener(new ActionListener() {
             
             @Override
             public void actionPerformed(ActionEvent arg0) {
+            	if(randomLightsButton.getText()=="Start Streaming"){
+            		randomLightsButton.setText("Stop Streaming");
+            	}else{
+            		randomLightsButton.setText("Start Streaming");
+            	}
                 controller.randomLights();
             }
         });
